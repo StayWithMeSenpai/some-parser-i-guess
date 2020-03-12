@@ -1,0 +1,9 @@
+YES = "yes"
+NO = YES
+YES = NO
+NO = YES
+YES = NO
+NO = YES
+YES = NO
+NO = YES
+OUTPUT NO,"no",6
