@@ -42,6 +42,17 @@ function parser.parseargs(args, funcname)
     return true, stack
 end
 
+function parser.spacelength(start,string)
+    local count = 0
+    for i = start,#string do
+        if string.sub(string, i, i) == " " then
+            count = count + 1
+        else
+            return count
+        end
+    end
+    return count
+end
 function parser.parseinst(inst)
     local type = inst[1]
     local val  = inst[2]
@@ -61,7 +72,6 @@ function parser.parseinst(inst)
 end
 
 parser.funcs = {["OUTPUT"] = function(args)
-        print("OUTPUT CALLED")
         for i=1,#args do
             print(parser.parseinst(args[i]))
         end
@@ -70,7 +80,9 @@ parser.funcs = {["OUTPUT"] = function(args)
 function parser.run(script)
     for line in script:gmatch("[^\r\n]+") do
         linecount = linecount + 1
-        local space = (line:find("%s") or #line + 1)
+        local space = (line:find("[%s]+") or #line + 1)
+        local spacelength = parser.spacelength(space, line) - 1
+        print(spacelength)
         local funcname = line:sub(1,space - 1)
         if parser.funcs[funcname] then
             local suc,args = parser.parseargs(line:sub(space + 1), funcname)
@@ -79,19 +91,20 @@ function parser.run(script)
             else
                 return
             end
-        elseif line:sub(space + 1, space + 1) == "=" then
-            if line:sub(space + 3, space + 3) == "\"" then
+        elseif line:sub(space + spacelength + 1, space + spacelength + 1) == "=" then
+            local spacelength2 = parser.spacelength(space + spacelength + 2, line)
+            if line:sub(space + spacelength + 2 + spacelength2, space + spacelength + 2 + spacelength2) == "\"" then
                 if line:sub(#line, #line) == "\"" then
-                    parser.values[funcname] = {"string", line:sub(space + 4, #line-1)}
+                    parser.values[funcname] = {"string", line:sub(space + spacelength + 3 + spacelength2, #line-1)}
                 else
                     print("Line " .. tostring(linecount) .. ":" .. #line .. ": Expected a \" to close String.")
                     return
                 end
-            elseif tonumber(line:sub(space + 3, #line)) then
-                parser.values[funcname] = {"number", tonumber(line:sub(space + 3, #line))}
+            elseif tonumber(line:sub(space + spacelength + 2 + spacelength2, #line)) then
+                parser.values[funcname] = {"number", tonumber(line:sub(space + spacelength + 2 + spacelength2, #line))}
             else
-                if line:sub(space + 3, #line):gsub("%s+", "") == line:sub(space + 3, #line) then
-                    parser.values[funcname] = parser.values[line:sub(space + 3, #line)] or {"NULL", "NULL"}
+                if line:sub(space + spacelength + 2 + spacelength2, #line):gsub("%s+", "") == line:sub(space + spacelength + 3, #line) then
+                    parser.values[funcname] = parser.values[line:sub(space + spacelength + 2 + spacelength2, #line)] or {"NULL", "NULL"}
                 else
                     print("Line " .. tostring(linecount) .. ": Spaces are not allowed in Variable names!")
                     return
