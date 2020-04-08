@@ -1,2 +1,2 @@
 # some-parser-i-guess
-Some shitty parser for an programming language i tried to make yesterday
+parse an shitte language called uhh no clue forgot the name but still enjoy
